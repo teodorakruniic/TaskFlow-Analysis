@@ -13,15 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Pretpostavke o ToDoService:
- * - saveOrUpdateToDoItem(ToDo) -> boolean
- *   vraća true ako se entitet uspešno sačuva i (po potrebi) može da se pročita po ID-u.
- *   Na grešku/izuzetak vraća false.
- * - getToDoItemById(Long id) -> ToDo ili null
- * - getToDoItemsByStatus(String status) -> List<ToDo> (nikad null; prazna lista kada nema ništa ili kada je status nevalidan)
- * - deleteToDoItem(Long id) -> boolean (OPCIONO; izbriši testove ako metoda ne postoji)
- */
 @ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ToDoServiceTest {

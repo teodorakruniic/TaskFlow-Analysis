@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '17', '21' ]   # koristi JDK 17 i 21
+        java: [ '17', '21' ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +26,6 @@ jobs:
       - name: Run tests
         run: mvn -B -U test
 
-      # (opciono) prikupi JUnit/JaCoCo ako postoji
       - name: Collect reports (Surefire + JaCoCo)
         if: always()
         run: |

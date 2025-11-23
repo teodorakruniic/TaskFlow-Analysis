@@ -8,7 +8,7 @@ import java.time.LocalTime;
 import java.util.Date;
 
 @Entity
-@Table (name="todo")
+@Table(name = "todo")
 public class ToDo {
 
     @Id
@@ -27,6 +27,7 @@ public class ToDo {
 
     @Column
     @Nonnull
+    @DateTimeFormat(pattern = "HH:mm")
     private LocalTime time;
 
     @Column
@@ -34,8 +35,10 @@ public class ToDo {
     private String status;
 
     public ToDo() {
-
+        this.status = "ToDo";
     }
+
+
 
     public Long getId() {
         return id;

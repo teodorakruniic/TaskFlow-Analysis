@@ -8,6 +8,6 @@ public class ToDoAppApplicationTests {
 
 	@Test
 	void contextLoads() {
-		// Proverava da li se ApplicationContext uspešno podiže
+
 	}
 }

@@ -103,8 +103,10 @@
 <div class="container">
     <h1 class="p-3">Add a ToDo Item</h1>
 
-    <form:form action="/saveToDoItem" method="post" modelAttribute="todo">
-        <div class="mb-3">
+    <form:form action="${pageContext.request.contextPath}/saveToDoItem"
+               method="post" modelAttribute="todo">
+
+    <div class="mb-3">
             <label for="title" class="form-label">Task Name</label>
             <form:input type="text" path="title" id="title" class="form-control" required="required"/>
         </div>
@@ -145,6 +147,8 @@
         <div class="text-center">
             <button type="submit" class="btn-add"><i class="fas fa-plus-circle"></i> Add</button>
         </div>
+
+
     </form:form>
 </div>
 

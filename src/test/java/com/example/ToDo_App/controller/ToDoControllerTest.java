@@ -15,7 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 
-@WebMvcTest // Testira samo sloj kontrolera
+@WebMvcTest
 public class ToDoControllerTest {
 
     @Autowired
@@ -24,18 +24,13 @@ public class ToDoControllerTest {
     @MockBean
     private ToDoService toDoService;
 
-    /**
-     * Test za uspešno dohvatanje svih ToDo stavki
-     */
+
     @Test
     public void testViewAllToDoItems() throws Exception {
         mockMvc.perform(get("/viewToDoList"))
                 .andExpect(status().isOk());
     }
 
-    /**
-     * Test za negativni scenarij - Nepostojeći URL
-     */
     @Test
     public void testViewAllToDoItems_NotFound() throws Exception {
         mockMvc.perform(get("/nonExistentPath"))
@@ -44,7 +39,6 @@ public class ToDoControllerTest {
 
     @Test
     void testViewAllToDoItems_Success() throws Exception {
-        // servis vraća praznu listu da ne pukne model
         when(toDoService.getToDoItemsByStatus(anyString())).thenReturn(java.util.Collections.emptyList());
 
         mockMvc.perform(get("/viewToDoList"))
