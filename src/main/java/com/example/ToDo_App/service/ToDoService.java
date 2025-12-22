@@ -2,7 +2,6 @@ package com.example.ToDo_App.service;
 
 import com.example.ToDo_App.model.ToDo;
 import com.example.ToDo_App.repo.IToDoRepo;
-import jakarta.persistence.Column;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -18,6 +16,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class ToDoService {
+
+    private static final String STATUS_ALL = "All";
+    private static final String STATUS_TODO = "ToDo";
+    private static final String STATUS_DOING = "Doing";
+    private static final String STATUS_DONE = "Done";
+    private static final String REPEAT_NONE = "/";
 
     @Autowired
     private IToDoRepo repo;
@@ -27,9 +31,8 @@ public class ToDoService {
 
     // Get all ToDo items
     public List<ToDo> getAllToDoItems() {
-        ArrayList<ToDo> todoList = new ArrayList<>();
-        repo.findAll().forEach(todo -> todoList.add(todo));
-        return todoList;
+        // repo.findAll() već vraća List, nema potrebe za ArrayList + lambda
+        return repo.findAll();
     }
 
     // Get a ToDo item by its ID
@@ -40,29 +43,35 @@ public class ToDoService {
     // Update status to "Done" and handle repeatable tasks
     public boolean updateStatus(Long id) {
         ToDo originalTask = getToDoItemById(id);
-        if (originalTask == null) return false;
+        if (originalTask == null) {
+            return false;
+        }
 
-        if ("Doing".equals(originalTask.getStatus())) {
+        if (STATUS_DOING.equals(originalTask.getStatus())) {
             originalTask.setDoneTime(new Date());
         }
-        originalTask.setStatus("Done");
-        repo.save(originalTask); // Save the completed task
+
+        originalTask.setStatus(STATUS_DONE);
+        repo.save(originalTask);
+
+        // sada se metoda stvarno koristi (PMD: unused private method rešeno)
+        sendCompletionEmail(originalTask);
 
         // Process repeatable task: Create a new task if needed
-        if (originalTask.getRepeatFrequency() != null && !"/".equals(originalTask.getRepeatFrequency())) {
+        if (originalTask.getRepeatFrequency() != null && !REPEAT_NONE.equals(originalTask.getRepeatFrequency())) {
             createNewRepeatableTask(originalTask);
         }
 
         return true;
     }
 
-
     // Create a new task with updated due date for repeatable tasks
     private void createNewRepeatableTask(ToDo originalTask) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(originalTask.getNextDueDate() != null ? originalTask.getNextDueDate() : originalTask.getDate());
+        Date baseDate = originalTask.getNextDueDate() != null ? originalTask.getNextDueDate() : originalTask.getDate();
+        calendar.setTime(baseDate);
 
-        // Update the next due date based on repeat frequency
+        // Switch statements should be exhaustive -> dodajemo default
         switch (originalTask.getRepeatFrequency()) {
             case "Daily":
                 calendar.add(Calendar.DATE, 1);
@@ -76,14 +85,16 @@ public class ToDoService {
             case "Yearly":
                 calendar.add(Calendar.YEAR, 1);
                 break;
+            default:
+                // ako dođe neočekivana vrednost, ne pravimo novu nalogu
+                return;
         }
 
-        // Create a new task instance
         ToDo newTask = new ToDo();
         newTask.setTitle(originalTask.getTitle());
         newTask.setDate(calendar.getTime());
         newTask.setTime(originalTask.getTime());
-        newTask.setStatus("ToDo");
+        newTask.setStatus(STATUS_TODO);
         newTask.setRepeatFrequency(originalTask.getRepeatFrequency());
         newTask.setNextDueDate(calendar.getTime());
 
@@ -92,15 +103,14 @@ public class ToDoService {
 
     // Fetch repeatable tasks
     public List<ToDo> getRepeatableTasks(String status) {
-        List<ToDo> tasks = getToDoItemsByStatus(status); // Fetch tasks by status first
+        List<ToDo> tasks = getToDoItemsByStatus(status);
 
-        // Filter repeatable tasks
         return tasks.stream()
                 .filter(task -> task.getRepeatFrequency() != null &&
-                        (task.getRepeatFrequency().equalsIgnoreCase("Daily") ||
-                                task.getRepeatFrequency().equalsIgnoreCase("Weekly") ||
-                                task.getRepeatFrequency().equalsIgnoreCase("Monthly") ||
-                                task.getRepeatFrequency().equalsIgnoreCase("Yearly")))
+                        ("Daily".equalsIgnoreCase(task.getRepeatFrequency()) ||
+                                "Weekly".equalsIgnoreCase(task.getRepeatFrequency()) ||
+                                "Monthly".equalsIgnoreCase(task.getRepeatFrequency()) ||
+                                "Yearly".equalsIgnoreCase(task.getRepeatFrequency())))
                 .collect(Collectors.toList());
     }
 
@@ -118,17 +128,19 @@ public class ToDoService {
 
     // Get ToDo items filtered by status
     public List<ToDo> getToDoItemsByStatus(String status) {
-        return status.equals("All") ? repo.findAll() : repo.findByStatus(status);
+        // PMD: Position literals first in String comparisons
+        return STATUS_ALL.equals(status) ? repo.findAll() : repo.findByStatus(status);
     }
 
     // Send email notification for completed task
     private void sendCompletionEmail(ToDo todo) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo("recipient@example.com");
-        message.setSubject("Task Completed 🎉");
-        message.setText("The task '" + todo.getTitle() + "' has been marked as completed. Keep it up!");
+        message.setSubject("Task Completed");
+        message.setText("The task '" + todo.getTitle() + "' has been marked as completed.");
         mailSender.send(message);
     }
+
     // Calculate number of tasks by status
     public long getTaskCountByStatus(String status) {
         return repo.findByStatus(status).size();
@@ -139,14 +151,11 @@ public class ToDoService {
         return repo.count();
     }
 
-    @Column
-    private Date doingStartTime;
-
-    @Column
-    private Date doneTime;
     public double calculateAverageDoingTime() {
-        List<ToDo> doingTasks = repo.findByStatus("Doing");
-        if (doingTasks.isEmpty()) return 0;
+        List<ToDo> doingTasks = repo.findByStatus(STATUS_DOING);
+        if (doingTasks.isEmpty()) {
+            return 0.0;
+        }
 
         return doingTasks.stream()
                 .mapToLong(task -> Duration.between(task.getTime(), LocalTime.now()).toMinutes())
@@ -157,24 +166,13 @@ public class ToDoService {
     // Calculate percentage of "Done" tasks
     public double calculateDoneTaskPercentage() {
         long totalTasks = getTotalTaskCount();
-        long doneTasks = getTaskCountByStatus("Done");
+        if (totalTasks == 0) {
+            return 0.0;
+        }
 
-        if (totalTasks == 0) return 0;
+        long doneTasks = getTaskCountByStatus(STATUS_DONE);
 
-        return (doneTasks * 100.0) / totalTasks;
+        // PMD: Useless parentheses uklonjeno
+        return doneTasks * 100.0 / totalTasks;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

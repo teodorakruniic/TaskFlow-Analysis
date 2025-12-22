@@ -38,7 +38,7 @@
         }
 
         .form-label {
-            color: #555555;
+            color: #555555;z
             font-weight: bold;
         }
 
