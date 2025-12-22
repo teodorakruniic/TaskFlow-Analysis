@@ -1,14 +1,28 @@
-name: SonarCloud
-on: [push]
+name: SonarCloud Analysis
+
+on: [push, pull_request]
+
 jobs:
-  sonar:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-java@v3
         with:
           java-version: '17'
-      - run: mvn clean compile
-      - run: mvn sonar:sonar
+
+      - name: Build
+        run: mvn clean compile
+
+      - name: Run SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=todorakruniic_TaskFlow-Analysis \  # PROMENI
+            -Dsonar.organization=todorakruniic \  # PROMENI
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
