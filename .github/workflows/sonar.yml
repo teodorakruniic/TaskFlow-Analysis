@@ -1,3 +1,4 @@
+# .github/workflows/sonar.yml
 name: SonarCloud Analysis
 
 on: [push, pull_request]
@@ -8,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # DODAJ OVO!
+          fetch-depth: 0
 
       - uses: actions/setup-java@v3
         with:
@@ -17,13 +18,12 @@ jobs:
 
       - name: Build and test
         run: mvn clean verify
-        # Ako nemaš testove: mvn clean compile
 
       - name: Run SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn sonar:sonar \
-            -Dsonar.projectKey=TaskFlow \
+            -Dsonar.projectKey=teodorakrunlic_TaskFlow-Analysis \  # ⭐ PROMENI OVO! ⭐
             -Dsonar.organization=teodorakrunlic \
             -Dsonar.host.url=https://sonarcloud.io
