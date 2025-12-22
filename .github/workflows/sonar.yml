@@ -1,3 +1,4 @@
+# .github/workflows/sonar.yml
 name: SonarCloud Analysis
 
 on: [push, pull_request]
@@ -13,16 +14,16 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           java-version: '17'
+          distribution: 'temurin'
 
-      - name: Build
-        run: mvn clean compile
+      - name: Build and test
+        run: mvn clean verify
 
-      - name: Run SonarCloud Scan
+      - name: Run SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn sonar:sonar \
-            -Dsonar.projectKey=todorakruniic_TaskFlow-Analysis \  # PROMENI
-            -Dsonar.organization=todorakruniic \  # PROMENI
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.projectKey=teodorakrunlic_TaskFlow-Analysis \  # ⭐ PROMENI OVO! ⭐
+            -Dsonar.organization=teodorakrunlic \
+            -Dsonar.host.url=https://sonarcloud.io
