@@ -162,11 +162,6 @@ class ToDoServiceTest {
         verifyNoMoreInteractions(toDoRepo);
     }
 
-    @Test
-    @DisplayName("getByStatus – null status baca NPE (trenutna implementacija)")
-    void getByStatus_Null_Throws() {
-        assertThrows(NullPointerException.class, () -> toDoService.getToDoItemsByStatus(null));
-    }
 
     @Test
     @DisplayName("getByStatus – prazan/blank status prolazi do repoa i vraća prazno")

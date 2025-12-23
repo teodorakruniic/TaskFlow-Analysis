@@ -23,9 +23,8 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
 
-      - name: Build (skip tests)
-        run: mvn -B -U verify -DskipTests
-
+      - name: Run tests
+        run: mvn -B -U test
 
       - name: Collect reports (Surefire + JaCoCo)
         if: always()
