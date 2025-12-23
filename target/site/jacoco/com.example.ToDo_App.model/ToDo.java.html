@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToDo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ToDo-App</a> &gt; <a href="index.source.html" class="el_package">com.example.ToDo_App.model</a> &gt; <span class="el_source">ToDo.java</span></div><h1>ToDo.java</h1><pre class="source lang-java linenums">package com.example.ToDo_App.model;
+
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.*;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalTime;
+import java.util.Date;
+
+@Entity
+@Table(name = &quot;todo&quot;)
+public class ToDo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Nonnull
+    private Long id;
+
+    @Column
+    @Nonnull
+    private String title;
+
+    @Column
+    @Nonnull
+    @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)
+    private Date date;
+
+    @Column
+    @Nonnull
+    @DateTimeFormat(pattern = &quot;HH:mm&quot;)
+    private LocalTime time;
+
+    @Column
+    @Nonnull
+    private String status;
+
+<span class="fc" id="L37">    public ToDo() {</span>
+<span class="fc" id="L38">        this.status = &quot;ToDo&quot;;</span>
+<span class="fc" id="L39">    }</span>
+
+
+
+    public Long getId() {
+<span class="fc" id="L44">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="fc" id="L48">        this.id = id;</span>
+<span class="fc" id="L49">    }</span>
+
+    public String getTitle() {
+<span class="fc" id="L52">        return title;</span>
+    }
+
+    public void setTitle(String title) {
+<span class="fc" id="L56">        this.title = title;</span>
+<span class="fc" id="L57">    }</span>
+
+    public Date getDate() {
+<span class="nc" id="L60">        return date;</span>
+    }
+
+    public LocalTime getTime() {
+<span class="nc" id="L64">        return time;</span>
+    }
+
+    public void setTime(LocalTime time) {
+<span class="nc" id="L68">        this.time = time;</span>
+<span class="nc" id="L69">    }</span>
+
+    public void setDate(Date date) {
+<span class="nc" id="L72">        this.date = date;</span>
+<span class="nc" id="L73">    }</span>
+
+    public String getStatus() {
+<span class="fc" id="L76">        return status;</span>
+    }
+
+    public void setStatus(String status) {
+<span class="fc" id="L80">        this.status = status;</span>
+<span class="fc" id="L81">    }</span>
+
+    //reports
+    @Column
+    private Date doingStartTime;
+
+    @Column
+    private Date doneTime;
+
+    public Date getDoingStartTime() {
+<span class="nc" id="L91">        return doingStartTime;</span>
+    }
+
+    public void setDoingStartTime(Date doingStartTime) {
+<span class="nc" id="L95">        this.doingStartTime = doingStartTime;</span>
+<span class="nc" id="L96">    }</span>
+
+    public Date getDoneTime() {
+<span class="nc" id="L99">        return doneTime;</span>
+    }
+
+    public void setDoneTime(Date doneTime) {
+<span class="nc" id="L103">        this.doneTime = doneTime;</span>
+<span class="nc" id="L104">    }</span>
+
+
+
+    @Column
+    private String repeatFrequency; // Options like &quot;Daily&quot;, &quot;Weekly&quot;, &quot;Monthly&quot;, etc.
+
+    @Column
+    private Date nextDueDate;
+
+    public String getRepeatFrequency() {
+<span class="nc" id="L115">        return repeatFrequency;</span>
+    }
+
+    public void setRepeatFrequency(String repeatFrequency) {
+<span class="nc" id="L119">        this.repeatFrequency = repeatFrequency;</span>
+<span class="nc" id="L120">    }</span>
+
+    public Date getNextDueDate() {
+<span class="nc" id="L123">        return nextDueDate;</span>
+    }
+
+    public void setNextDueDate(Date nextDueDate) {
+<span class="nc" id="L127">        this.nextDueDate = nextDueDate;</span>
+<span class="nc" id="L128">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

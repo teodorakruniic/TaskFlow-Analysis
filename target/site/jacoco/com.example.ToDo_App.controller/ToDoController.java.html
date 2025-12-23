@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToDoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ToDo-App</a> &gt; <a href="index.source.html" class="el_package">com.example.ToDo_App.controller</a> &gt; <span class="el_source">ToDoController.java</span></div><h1>ToDoController.java</h1><pre class="source lang-java linenums">package com.example.ToDo_App.controller;
+
+import com.example.ToDo_App.model.ToDo;
+import com.example.ToDo_App.service.ToDoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+import java.util.Map;
+
+@Controller
+<span class="fc" id="L15">public class ToDoController {</span>
+
+    @Autowired
+    private ToDoService service;
+
+    // View all ToDo items (filtered by status)
+    @GetMapping({&quot;/&quot;, &quot;/viewToDoList&quot;})
+    public String viewAllToDoItems(
+            @RequestParam(value = &quot;status&quot;, required = false, defaultValue = &quot;All&quot;) String status,
+            @RequestParam(value = &quot;repeatable&quot;, required = false, defaultValue = &quot;false&quot;) boolean repeatable,
+            Model model,
+            @ModelAttribute(&quot;message&quot;) String message) {
+
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        List&lt;ToDo&gt; tasks = repeatable</span>
+<span class="nc" id="L29">                ? service.getRepeatableTasks(status)</span>
+<span class="fc" id="L30">                : service.getToDoItemsByStatus(status);</span>
+
+<span class="fc" id="L32">        model.addAttribute(&quot;list&quot;, tasks);</span>
+<span class="fc" id="L33">        model.addAttribute(&quot;message&quot;, message);</span>
+<span class="fc" id="L34">        model.addAttribute(&quot;selectedStatus&quot;, status);</span>
+<span class="fc" id="L35">        model.addAttribute(&quot;repeatable&quot;, repeatable);</span>
+
+<span class="fc" id="L37">        return &quot;ViewToDoList&quot;;</span>
+    }
+
+
+    // Mark the task as complete (update status to &quot;Done&quot;)
+    @GetMapping(&quot;/updateToDoStatus/{id}&quot;)
+    public String updateToDoStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (service.updateStatus(id)) {</span>
+<span class="fc" id="L45">            redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Task marked as complete and email sent.&quot;);</span>
+<span class="fc" id="L46">            return &quot;redirect:/viewToDoList&quot;;</span>
+        }
+<span class="fc" id="L48">        redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Error marking task as complete.&quot;);</span>
+<span class="fc" id="L49">        return &quot;redirect:/viewToDoList&quot;;</span>
+    }
+
+    // Add new ToDo item
+    @GetMapping(&quot;/addToDoItem&quot;)
+    public String addToDoItem(Model model) {
+<span class="fc" id="L55">        model.addAttribute(&quot;todo&quot;, new ToDo());</span>
+<span class="fc" id="L56">        return &quot;AddToDoItem&quot;;</span>
+    }
+
+    // Save new ToDo item
+    @PostMapping(&quot;/saveToDoItem&quot;)
+    public String saveToDoItem(ToDo todo, RedirectAttributes redirectAttributes) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (service.saveOrUpdateToDoItem(todo)) {</span>
+<span class="nc" id="L63">            redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Save Success&quot;);</span>
+<span class="nc" id="L64">            return &quot;redirect:/viewToDoList&quot;;</span>
+        }
+<span class="nc" id="L66">        redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Save Failure&quot;);</span>
+<span class="nc" id="L67">        return &quot;redirect:/addToDoItem&quot;;</span>
+    }
+
+    // Edit existing ToDo item
+    @GetMapping(&quot;/editToDoItem/{id}&quot;)
+    public String editToDoItem(@PathVariable Long id, Model model) {
+<span class="nc" id="L73">        model.addAttribute(&quot;todo&quot;, service.getToDoItemById(id));</span>
+<span class="nc" id="L74">        return &quot;EditToDoItem&quot;;</span>
+    }
+
+    // Save edited ToDo item
+    @PostMapping(&quot;/editSaveToDoItem&quot;)
+    public String editSaveToDoItem(ToDo todo, RedirectAttributes redirectAttributes) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (service.saveOrUpdateToDoItem(todo)) {</span>
+<span class="nc" id="L81">            redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Edit Success&quot;);</span>
+<span class="nc" id="L82">            return &quot;redirect:/viewToDoList&quot;;</span>
+        }
+<span class="nc" id="L84">        redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Edit Failure&quot;);</span>
+<span class="nc" id="L85">        return &quot;redirect:/editToDoItem/&quot; + todo.getId();</span>
+    }
+
+    // Delete a ToDo item
+    @GetMapping(&quot;/deleteToDoItem/{id}&quot;)
+    public String deleteToDoItem(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (service.deleteToDoItem(id)) {</span>
+<span class="nc" id="L92">            redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Delete Success&quot;);</span>
+<span class="nc" id="L93">            return &quot;redirect:/viewToDoList&quot;;</span>
+        }
+<span class="nc" id="L95">        redirectAttributes.addFlashAttribute(&quot;message&quot;, &quot;Delete Failure&quot;);</span>
+<span class="nc" id="L96">        return &quot;redirect:/viewToDoList&quot;;</span>
+    }
+
+    //reports
+    @GetMapping(&quot;/reports&quot;)
+    public String viewReports(Model model) {
+<span class="nc" id="L102">        long todoCount = service.getTaskCountByStatus(&quot;ToDo&quot;);</span>
+<span class="nc" id="L103">        long doingCount = service.getTaskCountByStatus(&quot;Doing&quot;);</span>
+<span class="nc" id="L104">        long doneCount = service.getTaskCountByStatus(&quot;Done&quot;);</span>
+<span class="nc" id="L105">        long totalCount = service.getTotalTaskCount();</span>
+<span class="nc" id="L106">        double averageDoingTime = service.calculateAverageDoingTime();</span>
+<span class="nc" id="L107">        double completionPercentage = service.calculateDoneTaskPercentage();</span>
+
+
+<span class="nc" id="L110">        model.addAttribute(&quot;todoCount&quot;, todoCount);</span>
+<span class="nc" id="L111">        model.addAttribute(&quot;doingCount&quot;, doingCount);</span>
+<span class="nc" id="L112">        model.addAttribute(&quot;doneCount&quot;, doneCount);</span>
+<span class="nc" id="L113">        model.addAttribute(&quot;totalCount&quot;, totalCount);</span>
+<span class="nc" id="L114">        model.addAttribute(&quot;averageDoingTime&quot;, averageDoingTime);</span>
+<span class="nc" id="L115">        model.addAttribute(&quot;completionPercentage&quot;, completionPercentage);</span>
+
+
+<span class="nc" id="L118">        return &quot;Reports&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToDoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ToDo-App</a> &gt; <a href="index.source.html" class="el_package">com.example.ToDo_App.service</a> &gt; <span class="el_source">ToDoService.java</span></div><h1>ToDoService.java</h1><pre class="source lang-java linenums">package com.example.ToDo_App.service;
+
+import com.example.ToDo_App.model.ToDo;
+import com.example.ToDo_App.repo.IToDoRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.LocalTime;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+<span class="fc" id="L18">public class ToDoService {</span>
+
+    private static final String STATUS_ALL = &quot;All&quot;;
+    private static final String STATUS_TODO = &quot;ToDo&quot;;
+    private static final String STATUS_DOING = &quot;Doing&quot;;
+    private static final String STATUS_DONE = &quot;Done&quot;;
+    private static final String REPEAT_NONE = &quot;/&quot;;
+
+    @Autowired
+    private IToDoRepo repo;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    // Get all ToDo items
+    public List&lt;ToDo&gt; getAllToDoItems() {
+        // repo.findAll() već vraća List, nema potrebe za ArrayList + lambda
+<span class="nc" id="L35">        return repo.findAll();</span>
+    }
+
+    // Get a ToDo item by its ID
+    public ToDo getToDoItemById(Long id) {
+<span class="fc" id="L40">        return repo.findById(id).orElse(null);</span>
+    }
+
+    // Update status to &quot;Done&quot; and handle repeatable tasks
+    public boolean updateStatus(Long id) {
+<span class="nc" id="L45">        ToDo originalTask = getToDoItemById(id);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (originalTask == null) {</span>
+<span class="nc" id="L47">            return false;</span>
+        }
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (STATUS_DOING.equals(originalTask.getStatus())) {</span>
+<span class="nc" id="L51">            originalTask.setDoneTime(new Date());</span>
+        }
+
+<span class="nc" id="L54">        originalTask.setStatus(STATUS_DONE);</span>
+<span class="nc" id="L55">        repo.save(originalTask);</span>
+
+        // sada se metoda stvarno koristi (PMD: unused private method rešeno)
+<span class="nc" id="L58">        sendCompletionEmail(originalTask);</span>
+
+        // Process repeatable task: Create a new task if needed
+<span class="nc bnc" id="L61" title="All 4 branches missed.">        if (originalTask.getRepeatFrequency() != null &amp;&amp; !REPEAT_NONE.equals(originalTask.getRepeatFrequency())) {</span>
+<span class="nc" id="L62">            createNewRepeatableTask(originalTask);</span>
+        }
+
+<span class="nc" id="L65">        return true;</span>
+    }
+
+    // Create a new task with updated due date for repeatable tasks
+    private void createNewRepeatableTask(ToDo originalTask) {
+<span class="nc" id="L70">        Calendar calendar = Calendar.getInstance();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        Date baseDate = originalTask.getNextDueDate() != null ? originalTask.getNextDueDate() : originalTask.getDate();</span>
+<span class="nc" id="L72">        calendar.setTime(baseDate);</span>
+
+        // Switch statements should be exhaustive -&gt; dodajemo default
+<span class="nc bnc" id="L75" title="All 5 branches missed.">        switch (originalTask.getRepeatFrequency()) {</span>
+            case &quot;Daily&quot;:
+<span class="nc" id="L77">                calendar.add(Calendar.DATE, 1);</span>
+<span class="nc" id="L78">                break;</span>
+            case &quot;Weekly&quot;:
+<span class="nc" id="L80">                calendar.add(Calendar.DATE, 7);</span>
+<span class="nc" id="L81">                break;</span>
+            case &quot;Monthly&quot;:
+<span class="nc" id="L83">                calendar.add(Calendar.MONTH, 1);</span>
+<span class="nc" id="L84">                break;</span>
+            case &quot;Yearly&quot;:
+<span class="nc" id="L86">                calendar.add(Calendar.YEAR, 1);</span>
+<span class="nc" id="L87">                break;</span>
+            default:
+                // ako dođe neočekivana vrednost, ne pravimo novu nalogu
+<span class="nc" id="L90">                return;</span>
+        }
+
+<span class="nc" id="L93">        ToDo newTask = new ToDo();</span>
+<span class="nc" id="L94">        newTask.setTitle(originalTask.getTitle());</span>
+<span class="nc" id="L95">        newTask.setDate(calendar.getTime());</span>
+<span class="nc" id="L96">        newTask.setTime(originalTask.getTime());</span>
+<span class="nc" id="L97">        newTask.setStatus(STATUS_TODO);</span>
+<span class="nc" id="L98">        newTask.setRepeatFrequency(originalTask.getRepeatFrequency());</span>
+<span class="nc" id="L99">        newTask.setNextDueDate(calendar.getTime());</span>
+
+<span class="nc" id="L101">        repo.save(newTask);</span>
+<span class="nc" id="L102">    }</span>
+
+    // Fetch repeatable tasks
+    public List&lt;ToDo&gt; getRepeatableTasks(String status) {
+<span class="nc" id="L106">        List&lt;ToDo&gt; tasks = getToDoItemsByStatus(status);</span>
+
+<span class="nc" id="L108">        return tasks.stream()</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                .filter(task -&gt; task.getRepeatFrequency() != null &amp;&amp;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                        (&quot;Daily&quot;.equalsIgnoreCase(task.getRepeatFrequency()) ||</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                                &quot;Weekly&quot;.equalsIgnoreCase(task.getRepeatFrequency()) ||</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                                &quot;Monthly&quot;.equalsIgnoreCase(task.getRepeatFrequency()) ||</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                                &quot;Yearly&quot;.equalsIgnoreCase(task.getRepeatFrequency())))</span>
+<span class="nc" id="L114">                .collect(Collectors.toList());</span>
+    }
+
+    // Save or update a ToDo item
+    public boolean saveOrUpdateToDoItem(ToDo todo) {
+<span class="fc" id="L119">        ToDo updatedObj = repo.save(todo);</span>
+<span class="fc" id="L120">        return repo.findById(updatedObj.getId()).isPresent();</span>
+    }
+
+    // Delete a ToDo item
+    public boolean deleteToDoItem(Long id) {
+<span class="nc" id="L125">        repo.deleteById(id);</span>
+<span class="nc" id="L126">        return repo.findById(id).isEmpty();</span>
+    }
+
+    // Get ToDo items filtered by status
+    public List&lt;ToDo&gt; getToDoItemsByStatus(String status) {
+        // PMD: Position literals first in String comparisons
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        return STATUS_ALL.equals(status) ? repo.findAll() : repo.findByStatus(status);</span>
+    }
+
+    // Send email notification for completed task
+    private void sendCompletionEmail(ToDo todo) {
+<span class="nc" id="L137">        SimpleMailMessage message = new SimpleMailMessage();</span>
+<span class="nc" id="L138">        message.setTo(&quot;recipient@example.com&quot;);</span>
+<span class="nc" id="L139">        message.setSubject(&quot;Task Completed&quot;);</span>
+<span class="nc" id="L140">        message.setText(&quot;The task '&quot; + todo.getTitle() + &quot;' has been marked as completed.&quot;);</span>
+<span class="nc" id="L141">        mailSender.send(message);</span>
+<span class="nc" id="L142">    }</span>
+
+    // Calculate number of tasks by status
+    public long getTaskCountByStatus(String status) {
+<span class="nc" id="L146">        return repo.findByStatus(status).size();</span>
+    }
+
+    // Calculate total number of tasks
+    public long getTotalTaskCount() {
+<span class="nc" id="L151">        return repo.count();</span>
+    }
+
+    public double calculateAverageDoingTime() {
+<span class="nc" id="L155">        List&lt;ToDo&gt; doingTasks = repo.findByStatus(STATUS_DOING);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        if (doingTasks.isEmpty()) {</span>
+<span class="nc" id="L157">            return 0.0;</span>
+        }
+
+<span class="nc" id="L160">        return doingTasks.stream()</span>
+<span class="nc" id="L161">                .mapToLong(task -&gt; Duration.between(task.getTime(), LocalTime.now()).toMinutes())</span>
+<span class="nc" id="L162">                .average()</span>
+<span class="nc" id="L163">                .orElse(0.0);</span>
+    }
+
+    // Calculate percentage of &quot;Done&quot; tasks
+    public double calculateDoneTaskPercentage() {
+<span class="nc" id="L168">        long totalTasks = getTotalTaskCount();</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        if (totalTasks == 0) {</span>
+<span class="nc" id="L170">            return 0.0;</span>
+        }
+
+<span class="nc" id="L173">        long doneTasks = getTaskCountByStatus(STATUS_DONE);</span>
+
+        // PMD: Useless parentheses uklonjeno
+<span class="nc" id="L176">        return doneTasks * 100.0 / totalTasks;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
