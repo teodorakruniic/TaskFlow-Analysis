@@ -1,4 +1,5 @@
 name: SonarCloud Analysis
+  // SonarCloud re-analysis trigger
 
 on:
   push:
